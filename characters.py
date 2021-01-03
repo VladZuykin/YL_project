@@ -52,7 +52,6 @@ class OverWeighter(AnimatedSprite):
     V = 100
     G = V * 3
     J = V * 2
-    MOVES_VEL = 5
 
     def __init__(self, group, coords):
         super().__init__(group, load_image(self.IMG_NAME, self.DIR), 5, 1, *coords, 0)
@@ -61,7 +60,6 @@ class OverWeighter(AnimatedSprite):
         self.vert_vel = 0
         self.hor_vel = 0
         self.is_falling = True
-        self.sprite_timer = 0
 
     def update(self, left, right, jump):
         if right:
@@ -72,13 +70,17 @@ class OverWeighter(AnimatedSprite):
         self.change_frame(self.frame_num)
         self.x += self.hor_vel / FPS
         self.move(self.x, self.y)
-        while pygame.sprite.spritecollide(self, surfaces, False):
+        if pygame.sprite.spritecollide(self, boxes, False):
+            pygame.sprite.spritecollide(self, boxes, False)[0].try_to_move(self.hor_vel / FPS, surfaces)
+        while pygame.sprite.spritecollide(self, surfaces, False) or\
+                pygame.sprite.spritecollide(self, boxes, False):
             self.x -= self.hor_vel / abs(self.hor_vel)
             self.move(self.x, self.y)
         self.hor_vel = 0
 
         self.move(self.x, self.y + 1)
-        if not pygame.sprite.spritecollide(self, surfaces, False):
+        if not pygame.sprite.spritecollide(self, surfaces, False) and not\
+                pygame.sprite.spritecollide(self, boxes, False):
             self.is_falling = True
         self.move(self.x, self.y)
 
@@ -86,13 +88,15 @@ class OverWeighter(AnimatedSprite):
             self.vert_vel = -self.J
         self.y += self.vert_vel / FPS
         self.move(self.x, self.y)
-        if pygame.sprite.spritecollide(self, surfaces, False):
+        if pygame.sprite.spritecollide(self, surfaces, False) or \
+                pygame.sprite.spritecollide(self, boxes, False):
             self.is_falling = False
             self.y = int(self.y)
-            while pygame.sprite.spritecollide(self, surfaces, False):
+            self.move(self.x, self.y)
+            while pygame.sprite.spritecollide(self, surfaces, False) or \
+                    pygame.sprite.spritecollide(self, boxes, False):
                 self.y -= self.vert_vel / abs(self.vert_vel)
                 self.move(self.x, self.y)
-            self.is_falling = False
             self.vert_vel = 0
         if self.is_falling:
             self.vert_vel += self.G / FPS
@@ -134,13 +138,17 @@ class LightWeighter(AnimatedSprite):
         self.change_frame(self.frame_num)
         self.x += self.hor_vel / FPS
         self.move(self.x, self.y)
-        while pygame.sprite.spritecollide(self, surfaces, False):
+        if pygame.sprite.spritecollide(self, boxes, False):
+            pygame.sprite.spritecollide(self, boxes, False)[0].try_to_move(self.hor_vel / FPS, surfaces)
+        while pygame.sprite.spritecollide(self, surfaces, False) or\
+                pygame.sprite.spritecollide(self, boxes, False):
             self.x -= self.hor_vel / abs(self.hor_vel)
             self.move(self.x, self.y)
         self.hor_vel = 0
 
         self.move(self.x, self.y + 1)
-        if not pygame.sprite.spritecollide(self, surfaces, False):
+        if not pygame.sprite.spritecollide(self, surfaces, False) and not\
+                pygame.sprite.spritecollide(self, boxes, False):
             self.is_falling = True
         self.move(self.x, self.y)
 
@@ -148,13 +156,15 @@ class LightWeighter(AnimatedSprite):
             self.vert_vel = -self.J
         self.y += self.vert_vel / FPS
         self.move(self.x, self.y)
-        if pygame.sprite.spritecollide(self, surfaces, False):
+        if pygame.sprite.spritecollide(self, surfaces, False) or\
+                pygame.sprite.spritecollide(self, boxes, False):
             self.is_falling = False
             self.y = int(self.y)
-            while pygame.sprite.spritecollide(self, surfaces, False):
+            self.move(self.x, self.y)
+            while pygame.sprite.spritecollide(self, surfaces, False) or\
+                    pygame.sprite.spritecollide(self, boxes, False):
                 self.y -= self.vert_vel / abs(self.vert_vel)
                 self.move(self.x, self.y)
-            self.is_falling = False
             self.vert_vel = 0
         if self.is_falling:
             self.vert_vel += self.G / FPS
@@ -181,6 +191,60 @@ class LightWeighter(AnimatedSprite):
             self.sprite_timer += 1
 
 
+class Box(pygame.sprite.Sprite):
+    G = 300
+
+    def __init__(self, group, coords):
+        super().__init__(group)
+        self.image = pygame.transform.scale(load_image('box.png', 'pictures'), (50, 50))
+        self.rect = self.image.get_rect()
+        self.x, self.y = coords
+        self.rect.x, self.rect.y = coords
+        self.is_falling = True
+        self.vert_vel = 0
+
+    def move(self, x, y):
+        self.rect.x = int(x)
+        self.rect.y = int(y)
+
+    def try_to_move(self, vel, group):
+        self.move(self.x, self.y - 1)
+        if len(pygame.sprite.spritecollide(self, boxes, False)) > 1:
+            self.move(self.x, self.y)
+            return
+        self.move(self.x, self.y)
+        for i in range(int(abs(vel))):
+            self.x += vel / abs(vel)
+            self.move(self.x, self.y)
+            if len(pygame.sprite.spritecollide(self, boxes, False)) > 1 or\
+                    pygame.sprite.spritecollide(self, surfaces, False) or\
+                    pygame.sprite.spritecollide(self, group, False):
+                self.x -= vel / abs(vel)
+                self.move(self.x, self.y)
+                return
+        return
+
+    def update(self):
+        self.move(self.x, self.y + 1)
+        if not pygame.sprite.spritecollide(self, surfaces, False) or\
+                not len(pygame.sprite.spritecollide(self, boxes, False)) > 1:
+            self.is_falling = True
+        self.move(self.x, self.y)
+
+        self.y += self.vert_vel / FPS
+        self.move(self.x, self.y)
+        if pygame.sprite.spritecollide(self, surfaces, False) or\
+                len(pygame.sprite.spritecollide(self, boxes, False)) > 1:
+            self.is_falling = False
+            self.y = int(self.y)
+            self.move(self.x, self.y)
+            while pygame.sprite.spritecollide(self, surfaces, False) or\
+                    len(pygame.sprite.spritecollide(self, boxes, False)) > 1:
+                self.y -= 1
+                self.move(self.x, self.y)
+            self.vert_vel = 0
+        if self.is_falling:
+            self.vert_vel += self.G / FPS
 
 
 pygame.init()
@@ -192,6 +256,9 @@ timer = pygame.time.Clock()
 
 all_sprites = pygame.sprite.Group()
 surfaces = pygame.sprite.Group()
+boxes = pygame.sprite.Group()
+box = Box(boxes, (400, 200))
+box1 = Box(boxes, (400, 300))
 floor = pygame.sprite.Sprite(surfaces)
 floor.image = pygame.surface.Surface([500, 1])
 floor.image.fill((255, 255, 255))
@@ -224,6 +291,8 @@ while running:
     person.update(move_left, move_right, jump)
     jump = False
     all_sprites.draw(screen)
+    boxes.update()
+    boxes.draw(screen)
     surfaces.draw(screen)
     pygame.display.flip()
 pygame.quit()
