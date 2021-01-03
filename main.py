@@ -1,6 +1,9 @@
 import pygame
 
 
+FPS = 50
+
+
 class MainMenu:
     DEFAULT_WIN_SIZE = 800, 600
     GAME_NAME = "Названия нет"
