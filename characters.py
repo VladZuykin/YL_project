@@ -45,68 +45,22 @@ class AnimatedSprite(pygame.sprite.Sprite):
         self.image = self.frames[frame_num]
 
 
-class OverWeighter:
+class OverWeighter(AnimatedSprite):
     DIR = 'animation'
     IMG_NAME = 'HighWeigher.png'
     ANIM_DESC = {'stand': 0, 'move_left': 1, 'move_down': 2, 'move_up': 3, 'move_right': 4}
     V = 100
     G = V * 3
-
-    def __init__(self, group, coords):
-        self.coords = list(coords)
-        self.group = group
-        self.sprite = AnimatedSprite(group,
-                                     load_image(self.IMG_NAME, self.DIR),
-                                     5, 1,
-                                     *coords, 4)
-        self.vertical_vel = 0
-
-    def update(self, move_left, move_right, jump):
-        if move_left:
-            self.move_left()
-        if move_right:
-            self.move_right()
-        if jump:
-            self.jump()
-        self.fall()
-
-    def move_left(self):
-        self.coords = self.coords[0] - self.V / FPS,\
-                      self.coords[1]  # FPS - const
-        self.sprite.move(*self.coords, self.ANIM_DESC['move_left'])
-
-    def move_right(self):
-        self.coords = (self.coords[0] + self.V / FPS,
-                       self.coords[1])
-        self.sprite.move(*self.coords, self.ANIM_DESC['move_right'])
-
-    def jump(self):
-        if self.vertical_vel == 0:
-            self.vertical_vel = self.V * 3
-            self.coords = (self.coords[0], self.coords[1] + self.vertical_vel / FPS)
-            self.sprite.move(*self.coords)
-
-    def fall(self):
-        self.vertical_vel -= self.G / FPS
-        self.coords = (self.coords[0], self.coords[1] - self.vertical_vel / FPS)
-        self.sprite.move(*self.coords)
-
-
-class LightWeighter(AnimatedSprite):
-    DIR = 'animation'
-    IMG_NAME = 'LightWeight.png'
-    V = 100
-    G = V * 2
+    J = V * 2
     MOVES_VEL = 5
 
     def __init__(self, group, coords):
-        super().__init__(group, load_image(self.IMG_NAME, self.DIR), 4, 4, *coords, 0)
+        super().__init__(group, load_image(self.IMG_NAME, self.DIR), 5, 1, *coords, 0)
         self.x, self.y = coords
-        self.frames = [self.frames[0], *self.frames[4:12]]
         self.frame_num = 0
         self.vert_vel = 0
         self.hor_vel = 0
-        self.is_falling = False
+        self.is_falling = True
         self.sprite_timer = 0
 
     def update(self, left, right, jump):
@@ -129,7 +83,69 @@ class LightWeighter(AnimatedSprite):
         self.move(self.x, self.y)
 
         if jump and not self.is_falling:
-            self.vert_vel = -self.V * 3
+            self.vert_vel = -self.J
+        self.y += self.vert_vel / FPS
+        self.move(self.x, self.y)
+        if pygame.sprite.spritecollide(self, surfaces, False):
+            self.is_falling = False
+            self.y = int(self.y)
+            while pygame.sprite.spritecollide(self, surfaces, False):
+                self.y -= self.vert_vel / abs(self.vert_vel)
+                self.move(self.x, self.y)
+            self.is_falling = False
+            self.vert_vel = 0
+        if self.is_falling:
+            self.vert_vel += self.G / FPS
+
+    def sprite_changing(self):
+        if self.hor_vel == 0:
+            self.frame_num = 0
+            return
+        if self.hor_vel > 0:
+            self.frame_num = 4
+        if self.hor_vel < 0:
+            self.frame_num = 1
+
+
+class LightWeighter(AnimatedSprite):
+    DIR = 'animation'
+    IMG_NAME = 'LightWeight.png'
+    V = 100
+    G = V * 3
+    J = V * 3
+    MOVES_VEL = 5
+
+    def __init__(self, group, coords):
+        super().__init__(group, load_image(self.IMG_NAME, self.DIR), 4, 4, *coords, 0)
+        self.x, self.y = coords
+        self.frames = [self.frames[0], *self.frames[4:12]]
+        self.frame_num = 0
+        self.vert_vel = 0
+        self.hor_vel = 0
+        self.is_falling = True
+        self.sprite_timer = 0
+
+    def update(self, left, right, jump):
+        if right:
+            self.hor_vel += self.V
+        if left:
+            self.hor_vel -= self.V
+        self.sprite_changing()
+        self.change_frame(self.frame_num)
+        self.x += self.hor_vel / FPS
+        self.move(self.x, self.y)
+        while pygame.sprite.spritecollide(self, surfaces, False):
+            self.x -= self.hor_vel / abs(self.hor_vel)
+            self.move(self.x, self.y)
+        self.hor_vel = 0
+
+        self.move(self.x, self.y + 1)
+        if not pygame.sprite.spritecollide(self, surfaces, False):
+            self.is_falling = True
+        self.move(self.x, self.y)
+
+        if jump and not self.is_falling:
+            self.vert_vel = -self.J
         self.y += self.vert_vel / FPS
         self.move(self.x, self.y)
         if pygame.sprite.spritecollide(self, surfaces, False):
@@ -185,7 +201,7 @@ floor.rect.y = 500
 move_right = False
 move_left = False
 jump = False
-person = LightWeighter(all_sprites, (100, 100))
+person = OverWeighter(all_sprites, (100, 100))
 running = True
 while running:
     screen.fill((0, 0, 0))
