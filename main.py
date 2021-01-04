@@ -1,4 +1,5 @@
 import pygame
+from objects import OverWeighter, LightWeighter, Box, load_image
 
 
 FPS = 50
@@ -107,5 +108,69 @@ class MainMenu:
         self.title_font = pygame.font.SysFont('Calibri', int(self.win_size[1] * 0.1), True)
 
 
+class Level:
+    FIELD_SIZE = 16, 12
+
+    def __init__(self, lvl_file_name, res, control_scheme="DEFAULT"):  # res - разрешение окна.
+        self.block_size = res[0] // self.FIELD_SIZE[0], \
+                          res[1] // self.FIELD_SIZE[1]
+        self.objects = []
+        self.objects_groups = {"wall": pygame.sprite.Group(),
+                               "box": pygame.sprite.Group(),
+                               "person": pygame.sprite.Group()}
+        self.persons = []
+
+        self.get_from_file(lvl_file_name)
+
+        if control_scheme == "DEFAULT":
+            if type(self.persons[0]) == OverWeighter:
+                self.persons[0], self.persons[1] = (self.persons[1], self.persons[0])
+        else:
+            if type(self.persons[0]) == LightWeighter:
+                self.persons[0], self.persons[1] = (self.persons[1], self.persons[0])
+
+    def draw(self, surface):
+        self.objects_groups["wall"].draw(surface)
+        self.objects_groups["box"].draw(surface)
+        self.objects_groups["person"].draw(surface)
+
+    def update(self, action_list):  # Принимает коллекцию с кортежами действий персонажей.
+        for person_num, person in enumerate(self.persons):
+            person.update(action_list[person_num], self.objects_groups)
+        self.objects_groups["box"].update(self.objects_groups)
+
+    def get_from_file(self, file_name):
+        # S - незаполненное место, K - кнопка, B - коробка, D - дверь, W - опорные блоки(стены).
+        # H - тяжелый персонаж, L - легкий персонаж.
+        with open(file_name, "r", encoding="UTF-8") as f:
+            for row_num, row in enumerate(f.readlines()):
+                row_objects = []
+                for col_num, sign in enumerate(row.split()):
+                    absolute_coords = col_num * self.block_size[0], \
+                                      row_num * self.block_size[1]
+                    if sign.upper() == "S":
+                        row_objects.append(None)
+                    elif sign.upper() == "K":  # TODO
+                        row_objects.append(None)
+                    elif sign.upper() == "D":  # TODO
+                        row_objects.append(None)
+                    elif sign.upper() == "B":
+                        Box(self.objects_groups["box"], absolute_coords, self.block_size)
+                    elif sign.upper() == "W":
+                        wall_block = pygame.sprite.Sprite(self.objects_groups["wall"])
+                        wall_block.rect = (absolute_coords, self.block_size)
+                        wall_block.image = pygame.transform.scale(load_image("wall.png", "pictures"),
+                                                                  self.block_size)
+                        row_objects.append(wall_block)
+                    elif sign.upper() == "H":
+                        self.persons.append(OverWeighter(self.objects_groups["person"],
+                                                         absolute_coords, self.block_size))
+                    elif sign.upper() == "L":
+                        self.persons.append(LightWeighter(self.objects_groups["person"],
+                                                          absolute_coords, self.block_size))
+                self.objects.append(row_objects)
+
+
 if __name__ == '__main__':
     game = MainMenu()
+
