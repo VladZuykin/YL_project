@@ -1,7 +1,6 @@
 import pygame
 from objects import OverWeighter, LightWeighter, Box, load_image
 
-
 FPS = 50
 
 
@@ -77,7 +76,7 @@ class MainMenu:
             title = self.button_title_font.render(self.BUTTON_TITLES[button_number],
                                                   True, pygame.Color("#60607F"))
             title_center_coords = button_coords[0] + self.button_size[0] // 2, \
-                button_coords[1] + self.button_size[1] // 2
+                                  button_coords[1] + self.button_size[1] // 2
             title_place = title.get_rect(center=title_center_coords)
             self.screen.blit(title, title_place)
 
@@ -90,17 +89,17 @@ class MainMenu:
         # Определение границ и размера кнопок.
         self.outer_margins = (self.win_size[0] * 0.015, self.win_size[1] * 0.02)
         self.between_buttons_margins = self.win_size[1] * 0.02
-        self.button_size = self.menu_border_size[0] - self.outer_margins[0] * 2,\
-            (self.menu_border_size[1] -
-             (self.outer_margins[1] * 2 + self.between_buttons_margins *
-              (len(self.BUTTON_TITLES) - 1))) // len(self.BUTTON_TITLES)
+        self.button_size = self.menu_border_size[0] - self.outer_margins[0] * 2, \
+                           (self.menu_border_size[1] -
+                            (self.outer_margins[1] * 2 + self.between_buttons_margins *
+                             (len(self.BUTTON_TITLES) - 1))) // len(self.BUTTON_TITLES)
 
         # Определение координат кнопок.
         self.buttons_coords = []
         for button_number in range(len(self.BUTTON_TITLES)):
             button_x = self.menu_border_coords[0] + self.outer_margins[0]
             button_y = self.menu_border_coords[1] + self.outer_margins[1] + \
-                self.between_buttons_margins * button_number + self.button_size[1] * button_number
+                       self.between_buttons_margins * button_number + self.button_size[1] * button_number
             self.buttons_coords.append((button_x, button_y))
 
         # Определение размера шрифтов.
@@ -116,8 +115,12 @@ class Level:
                           res[1] // self.FIELD_SIZE[1]
         self.objects = []
         self.objects_groups = {"wall": pygame.sprite.Group(),
-                               "boxes":pygame.sprite.Group(),
+                               "boxes": pygame.sprite.Group(),
                                "light_boxes": pygame.sprite.Group(),
+                               "spikes": pygame.sprite.Group(),
+                               "vanished": pygame.sprite.Group(),
+                               "l_exit": pygame.sprite.Group(),
+                               "h_exit": pygame.sprite.Group(),
                                "light": pygame.sprite.Group(),
                                "heavy": pygame.sprite.Group()}
         self.persons = []
@@ -141,6 +144,20 @@ class Level:
         for person_num, person in enumerate(self.persons):
             person.update(action_list[person_num], self.objects_groups)
         self.objects_groups["boxes"].update(self.objects_groups)
+
+        win = True
+        for person_num, person in enumerate(self.persons):
+            if not person.is_in_exit(self.objects_groups):
+                win = False
+                break
+        if win:
+            pass  # WIN TODO
+
+        died = False
+        for person_num, person in enumerate(self.persons):
+            if not person.is_alive(self.FIELD_SIZE[1] * self.block_size[1]):
+                pass  # DIE TODO
+                break
 
     def get_from_file(self, file_name):
         # S - незаполненное место, K - кнопка, B - коробка, D - дверь, W - опорные блоки(стены).
@@ -176,4 +193,3 @@ class Level:
 
 if __name__ == '__main__':
     game = MainMenu()
-
