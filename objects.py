@@ -50,26 +50,23 @@ class AnimatedSprite(pygame.sprite.Sprite):
         self.image = self.frames[frame_num]
 
 
-class OverWeighter(AnimatedSprite):
-    DIR = 'animation'
-    IMG_NAME = 'HighWeighter.png'
+class Character(AnimatedSprite):
+    def __init__(self, group, coords, size, sheet, columns, rows, is_heavy):
+        super().__init__(group, sheet, columns, rows, *coords, size, 0)
+        self.is_heavy = is_heavy
 
-    def __init__(self, group, coords, size):
-        super().__init__(group, load_image(self.IMG_NAME, self.DIR), 5, 1, *coords, size, 0)
         self.frame_num = 0
+        self.sprite_timer = 0
 
-        self.V = size[0] // 1.2
-        self.G = size[1] * 7
-        self.J = size[1] * 4
+        self.V = 100
+        self.G = 100
+        self.J = 100
 
         self.vert_vel = 0
         self.hor_vel = 0
         self.x, self.y = coords
         self.is_falling = True
         self.alive = True
-
-    def is_in_exit(self, objects_groups):
-        return pygame.sprite.spritecollide(self, objects_groups["h_exit"], False)
 
     def is_alive(self, deadline):
         return self.alive and self.y < deadline
@@ -86,9 +83,16 @@ class OverWeighter(AnimatedSprite):
         self.change_frame(self.frame_num)
         self.x += self.hor_vel / FPS
         self.move(self.x, self.y)
-        if pygame.sprite.spritecollide(self, objects_groups["boxes"], False):
-            pygame.sprite.spritecollide(self, objects_groups["boxes"], False)[0].try_to_move(self.hor_vel / FPS,
-                                                                                             objects_groups, "light")
+        if self.is_heavy:
+            if pygame.sprite.spritecollide(self, objects_groups["boxes"], False):
+                pygame.sprite.spritecollide(self, objects_groups["boxes"], False)[0].try_to_move(self.hor_vel / FPS,
+                                                                                                 objects_groups,
+                                                                                                 "light")
+        else:
+            if pygame.sprite.spritecollide(self, objects_groups["light_boxes"], False):
+                pygame.sprite.spritecollide(self, objects_groups["light_boxes"], False)[0].try_to_move(self.hor_vel / FPS,
+                                                                                                       objects_groups,
+                                                                                                       "heavy")
         while pygame.sprite.spritecollide(self, objects_groups["wall"], False) or \
                 pygame.sprite.spritecollide(self, objects_groups["boxes"], False):
             self.x -= self.hor_vel / abs(self.hor_vel)
@@ -122,6 +126,24 @@ class OverWeighter(AnimatedSprite):
             self.die()
 
     def sprite_changing(self):
+        pass
+
+
+class OverWeighter(Character):
+    DIR = 'animation'
+    IMG_NAME = 'HighWeighter.png'
+
+    def __init__(self, group, coords, size):
+        super().__init__(group, coords, size, load_image(self.IMG_NAME, self.DIR), 5, 1, True)
+
+        self.V = size[0] // 1.2
+        self.G = size[1] * 7
+        self.J = size[1] * 4
+
+    def is_in_exit(self, objects_groups):
+        return pygame.sprite.spritecollide(self, objects_groups["h_exit"], False)
+
+    def sprite_changing(self):
         if self.hor_vel == 0:
             self.frame_num = 0
             return
@@ -131,81 +153,22 @@ class OverWeighter(AnimatedSprite):
             self.frame_num = 1
 
 
-class LightWeighter(AnimatedSprite):
+class LightWeighter(Character):
     DIR = 'animation'
     IMG_NAME = 'LightWeighter.png'
 
     ANIM_VEL = 5
 
     def __init__(self, group, coords, size):
-        super().__init__(group, load_image(self.IMG_NAME, self.DIR), 4, 4, *coords, size, 0)
+        super().__init__(group, coords, size, load_image(self.IMG_NAME, self.DIR), 4, 4, False)
         self.frames = [self.frames[0], *self.frames[4:12]]
-        self.frame_num = 0
-        self.sprite_timer = 0
 
         self.V = size[0] * 2
         self.G = size[1] * 6
         self.J = size[1] * 5
 
-        self.vert_vel = 0
-        self.hor_vel = 0
-        self.x, self.y = coords
-        self.is_falling = True
-        self.alive = True
-
     def is_in_exit(self, objects_groups):
         return pygame.sprite.spritecollide(self, objects_groups["l_exit"], False)
-
-    def is_alive(self, deadline):
-        return self.alive and self.y < deadline
-
-    def die(self):
-        self.alive = False
-
-    def update(self, action_list, objects_groups):
-        if action_list["move_right"]:
-            self.hor_vel += self.V
-        if action_list["move_left"]:
-            self.hor_vel -= self.V
-        self.sprite_changing()
-        self.change_frame(self.frame_num)
-        self.x += self.hor_vel / FPS
-        self.move(self.x, self.y)
-        if pygame.sprite.spritecollide(self, objects_groups["light_boxes"], False):
-            pygame.sprite.spritecollide(self, objects_groups["light_boxes"], False)[0].try_to_move(self.hor_vel / FPS,
-                                                                                                   objects_groups,
-                                                                                                   "heavy")
-        while pygame.sprite.spritecollide(self, objects_groups["wall"], False) or \
-                pygame.sprite.spritecollide(self, objects_groups["boxes"], False):
-            self.x -= self.hor_vel / abs(self.hor_vel)
-            self.move(self.x, self.y)
-        self.hor_vel = 0
-
-        self.move(self.x, self.y + 1)
-        if not pygame.sprite.spritecollide(self, objects_groups["wall"], False) and not \
-                pygame.sprite.spritecollide(self, objects_groups["boxes"], False):
-            self.is_falling = True
-        self.move(self.x, self.y)
-
-        if action_list["jump"] and not self.is_falling:
-            self.vert_vel = -self.J
-        self.y += self.vert_vel / FPS
-        self.move(self.x, self.y)
-        if pygame.sprite.spritecollide(self, objects_groups["wall"], False) or \
-                pygame.sprite.spritecollide(self, objects_groups["boxes"], False):
-            self.is_falling = False
-            self.y = int(self.y)
-            self.move(self.x, self.y)
-            while pygame.sprite.spritecollide(self, objects_groups["wall"], False) or \
-                    pygame.sprite.spritecollide(self, objects_groups["boxes"], False):
-                self.y -= self.vert_vel / abs(self.vert_vel)
-                self.move(self.x, self.y)
-            self.vert_vel = 0
-        if self.is_falling:
-            self.vert_vel += self.G / FPS
-
-        if pygame.sprite.spritecollide(self, objects_groups["spikes"], False):
-            self.die()
 
     def sprite_changing(self):
         if self.hor_vel == 0:
