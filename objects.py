@@ -84,25 +84,25 @@ class Character(AnimatedSprite):
         self.x += self.hor_vel / FPS
         self.move(self.x, self.y)
         if self.is_heavy:
-            if pygame.sprite.spritecollide(self, objects_groups["boxes"], False):
+            if pygame.sprite.spritecollideany(self, objects_groups["boxes"]):
                 pygame.sprite.spritecollide(self, objects_groups["boxes"], False)[0].try_to_move(self.hor_vel / FPS,
                                                                                                  objects_groups,
                                                                                                  "light")
         else:
-            if pygame.sprite.spritecollide(self, objects_groups["light_boxes"], False):
+            if pygame.sprite.spritecollideany(self, objects_groups["light_boxes"]):
                 pygame.sprite.spritecollide(self, objects_groups["light_boxes"], False)[0].try_to_move(
                     self.hor_vel / FPS,
                     objects_groups,
                     "heavy")
-        while pygame.sprite.spritecollide(self, objects_groups["wall"], False) or \
-                pygame.sprite.spritecollide(self, objects_groups["boxes"], False):
+        while pygame.sprite.spritecollideany(self, objects_groups["wall"]) or \
+                pygame.sprite.spritecollideany(self, objects_groups["boxes"]):
             self.x -= self.hor_vel / abs(self.hor_vel)
             self.move(self.x, self.y)
         self.hor_vel = 0
 
         self.move(self.x, self.y + 1)
-        if not pygame.sprite.spritecollide(self, objects_groups["wall"], False) and not \
-                pygame.sprite.spritecollide(self, objects_groups["boxes"], False):
+        if not pygame.sprite.spritecollideany(self, objects_groups["wall"]) and not \
+                pygame.sprite.spritecollideany(self, objects_groups["boxes"]):
             self.is_falling = True
         self.move(self.x, self.y)
 
@@ -110,20 +110,20 @@ class Character(AnimatedSprite):
             self.vert_vel = -self.J
         self.y += self.vert_vel / FPS
         self.move(self.x, self.y)
-        if pygame.sprite.spritecollide(self, objects_groups["wall"], False) or \
-                pygame.sprite.spritecollide(self, objects_groups["boxes"], False):
+        if pygame.sprite.spritecollideany(self, objects_groups["wall"]) or \
+                pygame.sprite.spritecollideany(self, objects_groups["boxes"]):
             self.is_falling = False
             self.y = int(self.y)
             self.move(self.x, self.y)
-            while pygame.sprite.spritecollide(self, objects_groups["wall"], False) or \
-                    pygame.sprite.spritecollide(self, objects_groups["boxes"], False):
+            while pygame.sprite.spritecollideany(self, objects_groups["wall"]) or \
+                    pygame.sprite.spritecollideany(self, objects_groups["boxes"]):
                 self.y -= self.vert_vel / abs(self.vert_vel)
                 self.move(self.x, self.y)
             self.vert_vel = 0
         if self.is_falling:
             self.vert_vel += self.G / FPS
 
-        if pygame.sprite.spritecollide(self, objects_groups["spikes"], False):
+        if pygame.sprite.spritecollideany(self, objects_groups["spikes"]):
             self.die()
 
     def sprite_changing(self):
@@ -142,7 +142,7 @@ class OverWeighter(Character):
         self.J = size[1] * 4
 
     def is_in_exit(self, objects_groups):
-        return pygame.sprite.spritecollide(self, objects_groups["h_exit"], False)
+        return pygame.sprite.spritecollideany(self, objects_groups["h_exit"])
 
     def sprite_changing(self):
         if self.hor_vel == 0:
@@ -169,7 +169,7 @@ class LightWeighter(Character):
         self.J = size[1] * 5
 
     def is_in_exit(self, objects_groups):
-        return pygame.sprite.spritecollide(self, objects_groups["l_exit"], False)
+        return pygame.sprite.spritecollideany(self, objects_groups["l_exit"])
 
     def sprite_changing(self):
         if self.hor_vel == 0:
@@ -225,10 +225,10 @@ class Box(pygame.sprite.Sprite):
             self.x += vel / abs(vel)
             self.move(self.x, self.y)
             if len(pygame.sprite.spritecollide(self, objects_groups["boxes"], False)) > 1 or \
-                    pygame.sprite.spritecollide(self, objects_groups["wall"], False) or \
-                    (pygame.sprite.spritecollide(self, objects_groups["vanished"], False) and not self.is_heavy) or \
-                    pygame.sprite.spritecollide(self, objects_groups["spikes"], False) or \
-                    pygame.sprite.spritecollide(self, objects_groups[oth_p], False):
+                    pygame.sprite.spritecollideany(self, objects_groups["wall"]) or \
+                    (pygame.sprite.spritecollideany(self, objects_groups["vanished"]) and not self.is_heavy) or \
+                    pygame.sprite.spritecollideany(self, objects_groups["spikes"]) or \
+                    pygame.sprite.spritecollideany(self, objects_groups[oth_p]):
                 self.x -= vel / abs(vel)
                 self.move(self.x, self.y)
                 return
@@ -236,32 +236,32 @@ class Box(pygame.sprite.Sprite):
 
     def update(self, objects_groups):
         self.move(self.x, self.y + 1)
-        if not pygame.sprite.spritecollide(self, objects_groups["wall"], False) and \
+        if not pygame.sprite.spritecollideany(self, objects_groups["wall"]) and \
                 not len(pygame.sprite.spritecollide(self, objects_groups["boxes"], False)) > 1 and \
-                not pygame.sprite.spritecollide(self, objects_groups["spikes"], False) and \
-                not (pygame.sprite.spritecollide(self, objects_groups["vanished"], False) and not self.is_heavy):
+                not pygame.sprite.spritecollideany(self, objects_groups["spikes"]) and \
+                not (pygame.sprite.spritecollideany(self, objects_groups["vanished"]) and not self.is_heavy):
             self.is_falling = True
         self.move(self.x, self.y)
 
         self.y += self.vert_vel / FPS
         self.move(self.x, self.y)
 
-        if pygame.sprite.spritecollide(self, objects_groups["heavy"], False):
+        if pygame.sprite.spritecollideany(self, objects_groups["heavy"]):
             objects_groups["heavy"].sprites[0].die()
-        if pygame.sprite.spritecollide(self, objects_groups["light"], False):
+        if pygame.sprite.spritecollideany(self, objects_groups["light"]):
             objects_groups["light"].sprites[0].die()
 
-        if pygame.sprite.spritecollide(self, objects_groups["wall"], False) or \
+        if pygame.sprite.spritecollideany(self, objects_groups["wall"]) or \
                 len(pygame.sprite.spritecollide(self, objects_groups["boxes"], False)) > 1 or \
-                (pygame.sprite.spritecollide(self, objects_groups["vanished"], False) and not self.is_heavy) or \
-                pygame.sprite.spritecollide(self, objects_groups["spikes"], False):
+                (pygame.sprite.spritecollideany(self, objects_groups["vanished"]) and not self.is_heavy) or \
+                pygame.sprite.spritecollideany(self, objects_groups["spikes"]):
             self.is_falling = False
             self.y = int(self.y)
             self.move(self.x, self.y)
-            while pygame.sprite.spritecollide(self, objects_groups["wall"], False) or \
+            while pygame.sprite.spritecollideany(self, objects_groups["wall"]) or \
                     len(pygame.sprite.spritecollide(self, objects_groups["boxes"], False)) > 1 or \
-                    (pygame.sprite.spritecollide(self, objects_groups["vanished"], False) and not self.is_heavy) or \
-                    pygame.sprite.spritecollide(self, objects_groups["spikes"], False):
+                    (pygame.sprite.spritecollideany(self, objects_groups["vanished"]) and not self.is_heavy) or \
+                    pygame.sprite.spritecollideany(self, objects_groups["spikes"]):
                 self.y -= 1
                 self.move(self.x, self.y)
             self.vert_vel = 0
@@ -295,11 +295,11 @@ class KeyAndDoor(pygame.sprite.Sprite):
             was_pushed = True
         else:
             was_pushed = False
-        while self.cur_height != 1 and (pygame.sprite.spritecollide(self, objects_groups["wall"], False) or
-                                        pygame.sprite.spritecollide(self, objects_groups["heavy"], False) or
-                                        pygame.sprite.spritecollide(self, objects_groups["light"], False) or
-                                        pygame.sprite.spritecollide(self, objects_groups["heavy_boxes"], False) or
-                                        pygame.sprite.spritecollide(self, objects_groups["light_boxes"], False)):
+        while self.cur_height != 1 and (pygame.sprite.spritecollideany(self, objects_groups["wall"]) or
+                                        pygame.sprite.spritecollideany(self, objects_groups["heavy"]) or
+                                        pygame.sprite.spritecollideany(self, objects_groups["light"]) or
+                                        pygame.sprite.spritecollideany(self, objects_groups["heavy_boxes"]) or
+                                        pygame.sprite.spritecollideany(self, objects_groups["light_boxes"])):
             self.cur_height -= 1
             self.image = pygame.Surface((self.width, self.cur_height))
             self.rect = self.image.get_rect()
@@ -307,11 +307,11 @@ class KeyAndDoor(pygame.sprite.Sprite):
             self.image.fill(self.color)
 
         while self.cur_height != self.height and not \
-                (pygame.sprite.spritecollide(self, objects_groups["wall"], False) or
-                 pygame.sprite.spritecollide(self, objects_groups["heavy"], False) or
-                 pygame.sprite.spritecollide(self, objects_groups["light"], False) or
-                 pygame.sprite.spritecollide(self, objects_groups["heavy_boxes"], False) or
-                 pygame.sprite.spritecollide(self, objects_groups["light_boxes"], False)):
+                (pygame.sprite.spritecollideany(self, objects_groups["wall"]) or
+                 pygame.sprite.spritecollideany(self, objects_groups["heavy"]) or
+                 pygame.sprite.spritecollideany(self, objects_groups["light"]) or
+                 pygame.sprite.spritecollideany(self, objects_groups["heavy_boxes"]) or
+                 pygame.sprite.spritecollideany(self, objects_groups["light_boxes"])):
             self.cur_height += 1
             self.image = pygame.Surface((self.width, self.cur_height))
             self.rect = self.image.get_rect()
@@ -323,7 +323,7 @@ class KeyAndDoor(pygame.sprite.Sprite):
             pygame.sprite.spritecollide(self.door, objects_groups["boxes"], True)
         if self.height != 1 and was_pushed:
             self.door.add(objects_groups["wall"])
-            if pygame.sprite.spritecollide(self.door, objects_groups["heavy"], False):
+            if pygame.sprite.spritecollideany(self.door, objects_groups["heavy"]):
                 objects_groups["heavy"].sprites[0].die()
-            if pygame.sprite.spritecollide(self.door, objects_groups["light"], False):
+            if pygame.sprite.spritecollideany(self.door, objects_groups["light"]):
                 objects_groups["light"].sprites[0].die()
