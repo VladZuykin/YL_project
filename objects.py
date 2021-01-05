@@ -90,9 +90,10 @@ class Character(AnimatedSprite):
                                                                                                  "light")
         else:
             if pygame.sprite.spritecollide(self, objects_groups["light_boxes"], False):
-                pygame.sprite.spritecollide(self, objects_groups["light_boxes"], False)[0].try_to_move(self.hor_vel / FPS,
-                                                                                                       objects_groups,
-                                                                                                       "heavy")
+                pygame.sprite.spritecollide(self, objects_groups["light_boxes"], False)[0].try_to_move(
+                    self.hor_vel / FPS,
+                    objects_groups,
+                    "heavy")
         while pygame.sprite.spritecollide(self, objects_groups["wall"], False) or \
                 pygame.sprite.spritecollide(self, objects_groups["boxes"], False):
             self.x -= self.hor_vel / abs(self.hor_vel)
@@ -200,6 +201,7 @@ class Box(pygame.sprite.Sprite):
         self.is_heavy = is_heavy
         if is_heavy:
             self.image = pygame.transform.scale(load_image('heavy_box.png', 'pictures'), size)
+            self.add(objects_groups['heavy_boxes'])
         else:
             self.image = pygame.transform.scale(load_image('box.png', 'pictures'), size)
             self.add(objects_groups['light_boxes'])
@@ -267,9 +269,61 @@ class Box(pygame.sprite.Sprite):
             self.vert_vel += self.G / FPS
 
 
-class Key(pygame.sprite.Sprite):
-    pass
+class KeyAndDoor(pygame.sprite.Sprite):
+    def __init__(self, objects_groups, k_coords, k_size, d_coords, d_size, color):
+        super().__init__(objects_groups["keys"])
+        if k_size[1] < 2:
+            k_size[1] = 2
+        self.width, self.height = k_size
+        self.cur_height = self.height
+        self.color = self.color
+        self.coords = self.coords
 
+        self.image = pygame.Surface(k_size)
+        self.rect = self.image.get_rect()
+        self.rect.x, self.rect.y = k_coords
+        self.image.fill(color)
 
-class Door(pygame.sprite.Sprite):
-    pass
+        self.door = pygame.sprite.Sprite(objects_groups["walls"])
+        self.door.image = pygame.Surface(d_size)
+        self.door.rect = self.door.image.get_rect()
+        self.rect.x, self.rect.y = d_coords
+        self.door.image.fill(color)
+
+    def update(self, objects_groups):
+        if self.cur_height == 1:
+            was_pushed = True
+        else:
+            was_pushed = False
+        while self.cur_height != 1 and (pygame.sprite.spritecollide(self, objects_groups["wall"], False) or
+                                        pygame.sprite.spritecollide(self, objects_groups["heavy"], False) or
+                                        pygame.sprite.spritecollide(self, objects_groups["light"], False) or
+                                        pygame.sprite.spritecollide(self, objects_groups["heavy_boxes"], False) or
+                                        pygame.sprite.spritecollide(self, objects_groups["light_boxes"], False)):
+            self.cur_height -= 1
+            self.image = pygame.Surface((self.width, self.cur_height))
+            self.rect = self.image.get_rect()
+            self.rect.x, self.rect.y = self.coords
+            self.image.fill(self.color)
+
+        while self.cur_height != self.height and not \
+                (pygame.sprite.spritecollide(self, objects_groups["wall"], False) or
+                 pygame.sprite.spritecollide(self, objects_groups["heavy"], False) or
+                 pygame.sprite.spritecollide(self, objects_groups["light"], False) or
+                 pygame.sprite.spritecollide(self, objects_groups["heavy_boxes"], False) or
+                 pygame.sprite.spritecollide(self, objects_groups["light_boxes"], False)):
+            self.cur_height += 1
+            self.image = pygame.Surface((self.width, self.cur_height))
+            self.rect = self.image.get_rect()
+            self.rect.x, self.rect.y = self.coords
+            self.image.fill(self.color)
+
+        if self.height == 1 and not was_pushed:
+            self.door.remove(objects_groups["wall"])
+            pygame.sprite.spritecollide(self.door, objects_groups["boxes"], True)
+        if self.height != 1 and was_pushed:
+            self.door.add(objects_groups["wall"])
+            if pygame.sprite.spritecollide(self.door, objects_groups["heavy"], False):
+                objects_groups["heavy"].sprites[0].die()
+            if pygame.sprite.spritecollide(self.door, objects_groups["light"], False):
+                objects_groups["light"].sprites[0].die()

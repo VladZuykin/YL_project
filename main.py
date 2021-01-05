@@ -1,5 +1,5 @@
 import pygame
-from objects import OverWeighter, LightWeighter, Box, load_image
+from objects import OverWeighter, LightWeighter, Box, load_image, KeyAndDoor
 
 FPS = 50
 
@@ -117,8 +117,11 @@ class Level:
         self.objects_groups = {"wall": pygame.sprite.Group(),
                                "boxes": pygame.sprite.Group(),
                                "light_boxes": pygame.sprite.Group(),
+                               "heavy_boxes": pygame.sprite.Group(),
                                "spikes": pygame.sprite.Group(),
                                "vanished": pygame.sprite.Group(),
+                               "keys": pygame.sprite.Group(),
+                               "doors": pygame.sprite.Group(),
                                "l_exit": pygame.sprite.Group(),
                                "h_exit": pygame.sprite.Group(),
                                "light": pygame.sprite.Group(),
@@ -144,6 +147,7 @@ class Level:
         for person_num, person in enumerate(self.persons):
             person.update(action_list[person_num], self.objects_groups)
         self.objects_groups["boxes"].update(self.objects_groups)
+        self.objects_groups["keys"].update(self.objects_groups)
 
         win = True
         for person_num, person in enumerate(self.persons):
