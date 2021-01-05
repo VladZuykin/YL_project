@@ -2,7 +2,6 @@ import pygame
 import os
 import sys
 
-
 FPS = 50  # TODO
 
 
@@ -56,7 +55,7 @@ class OverWeighter(AnimatedSprite):
     IMG_NAME = 'HighWeighter.png'
 
     def __init__(self, group, coords, size):
-        super().__init__(group, load_image(self.IMG_NAME, self.DIR), 5, 1, *coords, size,  0)
+        super().__init__(group, load_image(self.IMG_NAME, self.DIR), 5, 1, *coords, size, 0)
         self.frame_num = 0
 
         self.V = size[0] // 1.2
@@ -77,18 +76,18 @@ class OverWeighter(AnimatedSprite):
         self.change_frame(self.frame_num)
         self.x += self.hor_vel / FPS
         self.move(self.x, self.y)
-        if pygame.sprite.spritecollide(self, objects_groups["box"], False):
-            pygame.sprite.spritecollide(self, objects_groups["box"], False)[0].try_to_move(self.hor_vel / FPS,
-                                                                                           objects_groups)
-        while pygame.sprite.spritecollide(self, objects_groups["wall"], False) or\
-                pygame.sprite.spritecollide(self, objects_groups["box"], False):
+        if pygame.sprite.spritecollide(self, objects_groups["boxes"], False):
+            pygame.sprite.spritecollide(self, objects_groups["boxes"], False)[0].try_to_move(self.hor_vel / FPS,
+                                                                                           objects_groups, "light")
+        while pygame.sprite.spritecollide(self, objects_groups["wall"], False) or \
+                pygame.sprite.spritecollide(self, objects_groups["boxes"], False):
             self.x -= self.hor_vel / abs(self.hor_vel)
             self.move(self.x, self.y)
         self.hor_vel = 0
 
         self.move(self.x, self.y + 1)
-        if not pygame.sprite.spritecollide(self, objects_groups["wall"], False) and not\
-                pygame.sprite.spritecollide(self, objects_groups["box"], False):
+        if not pygame.sprite.spritecollide(self, objects_groups["wall"], False) and not \
+                pygame.sprite.spritecollide(self, objects_groups["boxes"], False):
             self.is_falling = True
         self.move(self.x, self.y)
 
@@ -97,12 +96,12 @@ class OverWeighter(AnimatedSprite):
         self.y += self.vert_vel / FPS
         self.move(self.x, self.y)
         if pygame.sprite.spritecollide(self, objects_groups["wall"], False) or \
-                pygame.sprite.spritecollide(self, objects_groups["box"], False):
+                pygame.sprite.spritecollide(self, objects_groups["boxes"], False):
             self.is_falling = False
             self.y = int(self.y)
             self.move(self.x, self.y)
             while pygame.sprite.spritecollide(self, objects_groups["wall"], False) or \
-                    pygame.sprite.spritecollide(self, objects_groups["box"], False):
+                    pygame.sprite.spritecollide(self, objects_groups["boxes"], False):
                 self.y -= self.vert_vel / abs(self.vert_vel)
                 self.move(self.x, self.y)
             self.vert_vel = 0
@@ -149,18 +148,18 @@ class LightWeighter(AnimatedSprite):
         self.change_frame(self.frame_num)
         self.x += self.hor_vel / FPS
         self.move(self.x, self.y)
-        if pygame.sprite.spritecollide(self, objects_groups["box"], False):
-            pygame.sprite.spritecollide(self, objects_groups["box"], False)[0].try_to_move(self.hor_vel / FPS,
-                                                                                           objects_groups)
-        while pygame.sprite.spritecollide(self, objects_groups["wall"], False) or\
-                pygame.sprite.spritecollide(self, objects_groups["box"], False):
+        if pygame.sprite.spritecollide(self, objects_groups["light_boxes"], False):
+            pygame.sprite.spritecollide(self, objects_groups["light_boxes"], False)[0].try_to_move(self.hor_vel / FPS,
+                                                                                           objects_groups, "heavy")
+        while pygame.sprite.spritecollide(self, objects_groups["wall"], False) or \
+                pygame.sprite.spritecollide(self, objects_groups["boxes"], False):
             self.x -= self.hor_vel / abs(self.hor_vel)
             self.move(self.x, self.y)
         self.hor_vel = 0
 
         self.move(self.x, self.y + 1)
-        if not pygame.sprite.spritecollide(self, objects_groups["wall"], False) and not\
-                pygame.sprite.spritecollide(self, objects_groups["box"], False):
+        if not pygame.sprite.spritecollide(self, objects_groups["wall"], False) and not \
+                pygame.sprite.spritecollide(self, objects_groups["boxes"], False):
             self.is_falling = True
         self.move(self.x, self.y)
 
@@ -168,13 +167,13 @@ class LightWeighter(AnimatedSprite):
             self.vert_vel = -self.J
         self.y += self.vert_vel / FPS
         self.move(self.x, self.y)
-        if pygame.sprite.spritecollide(self, objects_groups["wall"], False) or\
-                pygame.sprite.spritecollide(self, objects_groups["box"], False):
+        if pygame.sprite.spritecollide(self, objects_groups["wall"], False) or \
+                pygame.sprite.spritecollide(self, objects_groups["boxes"], False):
             self.is_falling = False
             self.y = int(self.y)
             self.move(self.x, self.y)
-            while pygame.sprite.spritecollide(self, objects_groups["wall"], False) or\
-                    pygame.sprite.spritecollide(self, objects_groups["box"], False):
+            while pygame.sprite.spritecollide(self, objects_groups["wall"], False) or \
+                    pygame.sprite.spritecollide(self, objects_groups["boxes"], False):
                 self.y -= self.vert_vel / abs(self.vert_vel)
                 self.move(self.x, self.y)
             self.vert_vel = 0
@@ -204,10 +203,15 @@ class LightWeighter(AnimatedSprite):
 
 
 class Box(pygame.sprite.Sprite):
-    def __init__(self, group, coords, size):
-        super().__init__(group)
+    def __init__(self, objects_groups, coords, size, is_heavy):
+        super().__init__()
         self.G = size[1] * 5
-        self.image = pygame.transform.scale(load_image('box.png', 'pictures'), size)
+        self.add(objects_groups['boxes'])
+        if is_heavy:
+            self.image = pygame.transform.scale(load_image('heavy_box.png', 'pictures'), size)
+        else:
+            self.image = pygame.transform.scale(load_image('box.png', 'pictures'), size)
+            self.add(objects_groups['light_boxes'])
         self.rect = self.image.get_rect()
         self.x, self.y = coords
         self.rect.x, self.rect.y = coords
@@ -218,17 +222,18 @@ class Box(pygame.sprite.Sprite):
         self.rect.x = int(x)
         self.rect.y = int(y)
 
-    def try_to_move(self, vel, objects_groups):
+    def try_to_move(self, vel, objects_groups, oth_p):
         self.move(self.x, self.y - 1)
-        if len(pygame.sprite.spritecollide(self, objects_groups["box"], False)) > 1:
+        if len(pygame.sprite.spritecollide(self, objects_groups["boxes"], False)) > 1:
             self.move(self.x, self.y)
             return
         self.move(self.x, self.y)
         for i in range(int(abs(vel))):
             self.x += vel / abs(vel)
             self.move(self.x, self.y)
-            if len(pygame.sprite.spritecollide(self, objects_groups["box"], False)) > 1 or\
-                    pygame.sprite.spritecollide(self, objects_groups["wall"], False):
+            if len(pygame.sprite.spritecollide(self, objects_groups["boxes"], False)) > 1 or \
+                    pygame.sprite.spritecollide(self, objects_groups["wall"], False) or \
+                    pygame.sprite.spritecollide(self, objects_groups[oth_p], False):
                 self.x -= vel / abs(vel)
                 self.move(self.x, self.y)
                 return
@@ -236,20 +241,23 @@ class Box(pygame.sprite.Sprite):
 
     def update(self, objects_groups):
         self.move(self.x, self.y + 1)
-        if not pygame.sprite.spritecollide(self, objects_groups["wall"], False) or\
-                not len(pygame.sprite.spritecollide(self, objects_groups["box"], False)) > 1:
+        if not pygame.sprite.spritecollide(self, objects_groups["wall"], False) or \
+                not len(pygame.sprite.spritecollide(self, objects_groups["boxes"], False)) > 1:
             self.is_falling = True
         self.move(self.x, self.y)
 
         self.y += self.vert_vel / FPS
         self.move(self.x, self.y)
-        if pygame.sprite.spritecollide(self, objects_groups["wall"], False) or\
-                len(pygame.sprite.spritecollide(self, objects_groups["box"], False)) > 1:
+        if pygame.sprite.spritecollide(self, objects_groups["heavy"], False) or \
+                pygame.sprite.spritecollide(self, objects_groups["light"], False):
+            pass  # DIE TODO
+        if pygame.sprite.spritecollide(self, objects_groups["wall"], False) or \
+                len(pygame.sprite.spritecollide(self, objects_groups["boxes"], False)) > 1:
             self.is_falling = False
             self.y = int(self.y)
             self.move(self.x, self.y)
-            while pygame.sprite.spritecollide(self, objects_groups["wall"], False) or\
-                    len(pygame.sprite.spritecollide(self, objects_groups["box"], False)) > 1:
+            while pygame.sprite.spritecollide(self, objects_groups["wall"], False) or \
+                    len(pygame.sprite.spritecollide(self, objects_groups["boxes"], False)) > 1:
                 self.y -= 1
                 self.move(self.x, self.y)
             self.vert_vel = 0

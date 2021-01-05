@@ -116,8 +116,10 @@ class Level:
                           res[1] // self.FIELD_SIZE[1]
         self.objects = []
         self.objects_groups = {"wall": pygame.sprite.Group(),
-                               "box": pygame.sprite.Group(),
-                               "person": pygame.sprite.Group()}
+                               "boxes":pygame.sprite.Group(),
+                               "light_boxes": pygame.sprite.Group(),
+                               "light": pygame.sprite.Group(),
+                               "heavy": pygame.sprite.Group()}
         self.persons = []
 
         self.get_from_file(lvl_file_name)
@@ -131,13 +133,14 @@ class Level:
 
     def draw(self, surface):
         self.objects_groups["wall"].draw(surface)
-        self.objects_groups["box"].draw(surface)
-        self.objects_groups["person"].draw(surface)
+        self.objects_groups["boxes"].draw(surface)
+        self.objects_groups["heavy"].draw(surface)
+        self.objects_groups["light"].draw(surface)
 
     def update(self, action_list):  # Принимает коллекцию с кортежами действий персонажей.
         for person_num, person in enumerate(self.persons):
             person.update(action_list[person_num], self.objects_groups)
-        self.objects_groups["box"].update(self.objects_groups)
+        self.objects_groups["boxes"].update(self.objects_groups)
 
     def get_from_file(self, file_name):
         # S - незаполненное место, K - кнопка, B - коробка, D - дверь, W - опорные блоки(стены).
@@ -155,7 +158,7 @@ class Level:
                     elif sign.upper() == "D":  # TODO
                         row_objects.append(None)
                     elif sign.upper() == "B":
-                        Box(self.objects_groups["box"], absolute_coords, self.block_size)
+                        Box(self.objects_groups, absolute_coords, self.block_size, False)
                     elif sign.upper() == "W":
                         wall_block = pygame.sprite.Sprite(self.objects_groups["wall"])
                         wall_block.rect = (absolute_coords, self.block_size)
@@ -163,10 +166,10 @@ class Level:
                                                                   self.block_size)
                         row_objects.append(wall_block)
                     elif sign.upper() == "H":
-                        self.persons.append(OverWeighter(self.objects_groups["person"],
+                        self.persons.append(OverWeighter(self.objects_groups["heavy"],
                                                          absolute_coords, self.block_size))
                     elif sign.upper() == "L":
-                        self.persons.append(LightWeighter(self.objects_groups["person"],
+                        self.persons.append(LightWeighter(self.objects_groups["light"],
                                                           absolute_coords, self.block_size))
                 self.objects.append(row_objects)
 
