@@ -480,10 +480,10 @@ class Level:
                             picture = "LightWeighterPortal.png"
                         elif sign.upper() == "W":
                             group = "walls"
-                            picture = "wall.png"
+                            picture = "Wall.png"
                         elif sign.upper() == "V":
                             group = "vanished"
-                            picture = "vanished.png"
+                            picture = "Vanished.png"
                         obj = pygame.sprite.Sprite(self.objects_groups[group])
                         obj.rect = absolute_coords, self.block_size
                         obj.image = pygame.transform.scale(load_image(

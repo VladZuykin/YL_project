@@ -205,10 +205,10 @@ class Box(pygame.sprite.Sprite):
         self.add(objects_groups['boxes'])
         self.is_heavy = is_heavy
         if is_heavy:
-            self.image = pygame.transform.scale(load_image('heavy_box.png', 'pictures'), size)
+            self.image = pygame.transform.scale(load_image('HeavyBox.png', 'pictures'), size)
             self.add(objects_groups['heavy_boxes'])
         else:
-            self.image = pygame.transform.scale(load_image('box.png', 'pictures'), size)
+            self.image = pygame.transform.scale(load_image('Box.png', 'pictures'), size)
             self.add(objects_groups['light_boxes'])
         self.rect = self.image.get_rect()
         self.x, self.y = coords
@@ -286,13 +286,13 @@ class KeyAndDoor(pygame.sprite.Sprite):
         self.image.fill(self.color)
 
         self.door = pygame.sprite.Sprite(objects_groups["walls"])
-        self.door.image = self.scale_door(load_image("door.png", "pictures"), d_size)
+        self.door.image = self.scale_door(load_image("Door.png", "pictures"), d_size)
         self.door.rect = self.door.image.get_rect()
-        self.door.rect.x, self.door.rect.y = d_coords[0] + (d_size[0] - self.door.rect[2]) // 2 - 1, \
+        self.door.rect.x, self.door.rect.y = d_coords[0] + (d_size[0] - self.door.rect[2]) // 2, \
             d_coords[1]
 
     def scale_door(self, img, size_need):
-        img.fill(pygame.Color(self.color), (15, 15, 45, 115))
+        img.fill(pygame.Color(self.color), (18, 12, 42, 120))
         src_size = img.get_rect()[2:]
         new_width = src_size[0] * size_need[1] // src_size[1]
         new_size = new_width, size_need[1]
