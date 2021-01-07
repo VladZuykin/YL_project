@@ -1,8 +1,13 @@
 import pygame
 import os
 import sys
+from random import randrange
 
 FPS = 60
+
+
+def generate_color():
+    return randrange(0, 255), randrange(0, 255), randrange(0, 255)
 
 
 def load_image(name, dir, colorkey=None):
@@ -266,25 +271,32 @@ class Box(pygame.sprite.Sprite):
 
 
 class KeyAndDoor(pygame.sprite.Sprite):
-    def __init__(self, objects_groups, k_coords, k_size, d_coords, d_size, color):
+    def __init__(self, objects_groups, k_coords, k_size, d_coords, d_size):
         super().__init__(objects_groups["keys"])
         if k_size[1] < 2:
             k_size[1] = 2
         self.width, self.height = k_size
         self.cur_height = self.height
-        self.color = color
+        self.color = generate_color()
         self.coords = list(k_coords)
 
         self.image = pygame.Surface(k_size)
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = k_coords
-        self.image.fill(color)
+        self.image.fill(self.color)
 
         self.door = pygame.sprite.Sprite(objects_groups["walls"])
-        self.door.image = pygame.Surface(d_size)
+        self.door.image = self.scale_door(load_image("door.png", "pictures"), d_size)
         self.door.rect = self.door.image.get_rect()
-        self.door.rect.x, self.door.rect.y = d_coords
-        self.door.image.fill(color)
+        self.door.rect.x, self.door.rect.y = d_coords[0] + (d_size[0] - self.door.rect[2]) // 2 - 1, \
+            d_coords[1]
+
+    def scale_door(self, img, size_need):
+        img.fill(pygame.Color(self.color), (17, 17, 43, 112))
+        src_size = img.get_rect()[2:]
+        new_width = src_size[0] * size_need[1] // src_size[1]
+        new_size = new_width, size_need[1]
+        return pygame.transform.scale(img, new_size)
 
     def update(self, objects_groups):
         if self.cur_height == 1:
@@ -322,6 +334,6 @@ class KeyAndDoor(pygame.sprite.Sprite):
         if self.cur_height != 1 and was_pushed:
             self.door.add(objects_groups["walls"])
             if pygame.sprite.spritecollideany(self.door, objects_groups["heavy"]):
-                objects_groups["heavy"].sprites[0].die()
+                objects_groups["heavy"].sprites()[0].die()
             if pygame.sprite.spritecollideany(self.door, objects_groups["light"]):
-                objects_groups["light"].sprites[0].die()
+                objects_groups["light"].sprites()[0].die()

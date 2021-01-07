@@ -433,8 +433,7 @@ class Level:
 
                         KeyAndDoor(self.objects_groups,
                                    key_absolute_coords, key_size,
-                                   door_absolute_coords, self.block_size,
-                                   (200, 0, 0))
+                                   door_absolute_coords, self.block_size)
 
                     elif sign.upper() == "SP":
                         spikes = pygame.sprite.Sprite(self.objects_groups["spikes"])
