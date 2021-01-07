@@ -318,8 +318,14 @@ class Level:
     DEFAULT_ACTIONS = {"move_left": False, "move_right": False, "jump": False}
 
     def __init__(self, lvl_file_name, res, surface, control_scheme):  # res - разрешение окна.
-        self.block_size = res[0] // self.FIELD_SIZE[0], \
-                          res[1] // self.FIELD_SIZE[1]
+        self.res = res
+        self.message = ""
+        self.sub_message = "Нажмите Q, чтобы вернуться в меню."
+        self.message_font = pygame.font.SysFont("Calibri", self.res[0] // 8, True)
+        self.sub_message_font = pygame.font.SysFont("Calibri", self.res[0] // 20, True)
+
+        self.block_size = self.res[0] // self.FIELD_SIZE[0], \
+            self.res[1] // self.FIELD_SIZE[1]
         self.persons = []
         self.objects_groups = {"walls": pygame.sprite.Group(),
                                "boxes": pygame.sprite.Group(),
@@ -347,41 +353,47 @@ class Level:
 
         timer = pygame.time.Clock()
         self.running = True
+        self.freeze = False
         while self.running:
             self.surface.fill(pygame.Color(MAIN_COLOR))
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     exit(0)
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_UP:
-                        self.persons_actions[0]["jump"] = True
-                    elif event.key == pygame.K_w:
-                        self.persons_actions[1]["jump"] = True
+                elif event.type == pygame.KEYDOWN and event.key == pygame.K_q:
+                    self.running = False
+                if not self.freeze:
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_UP:
+                            self.persons_actions[0]["jump"] = True
+                        elif event.key == pygame.K_w:
+                            self.persons_actions[1]["jump"] = True
+                        elif event.key == pygame.K_LEFT:
+                            self.persons_actions[0]["move_left"] = True
+                        elif event.key == pygame.K_a:
+                            self.persons_actions[1]["move_left"] = True
 
-                    elif event.key == pygame.K_LEFT:
-                        self.persons_actions[0]["move_left"] = True
-                    elif event.key == pygame.K_a:
-                        self.persons_actions[1]["move_left"] = True
+                        elif event.key == pygame.K_RIGHT:
+                            self.persons_actions[0]["move_right"] = True
+                        elif event.key == pygame.K_d:
+                            self.persons_actions[1]["move_right"] = True
 
-                    elif event.key == pygame.K_RIGHT:
-                        self.persons_actions[0]["move_right"] = True
-                    elif event.key == pygame.K_d:
-                        self.persons_actions[1]["move_right"] = True
+                    elif event.type == pygame.KEYUP:
+                        if event.key == pygame.K_LEFT:
+                           self.persons_actions[0]["move_left"] = False
+                        elif event.key == pygame.K_a:
+                            self.persons_actions[1]["move_left"] = False
 
-                elif event.type == pygame.KEYUP:
-                    if event.key == pygame.K_LEFT:
-                        self.persons_actions[0]["move_left"] = False
-                    elif event.key == pygame.K_a:
-                        self.persons_actions[1]["move_left"] = False
-
-                    elif event.key == pygame.K_RIGHT:
-                        self.persons_actions[0]["move_right"] = False
-                    elif event.key == pygame.K_d:
-                        self.persons_actions[1]["move_right"] = False
+                        elif event.key == pygame.K_RIGHT:
+                            self.persons_actions[0]["move_right"] = False
+                        elif event.key == pygame.K_d:
+                            self.persons_actions[1]["move_right"] = False
             timer.tick(FPS)
             self.draw()
-            self.update(self.persons_actions)
-            self.persons_actions[0]["jump"] = self.persons_actions[1]["jump"] = False
+            if not self.freeze:
+                self.update(self.persons_actions)
+                self.persons_actions[0]["jump"] = self.persons_actions[1]["jump"] = False
+            else:
+                self.show_message()
             pygame.display.flip()
 
     def draw(self):
@@ -402,15 +414,16 @@ class Level:
         self.objects_groups["keys"].update(self.objects_groups)
 
         win = True
-        for person_num, person in enumerate(self.persons):
+        for person in self.persons:
             if not person.is_in_exit(self.objects_groups):
                 win = False
                 break
         if win:
-            self.running = False
-        for person_num, person in enumerate(self.persons):
+            self.win()
+
+        for person in self.persons:
             if not person.is_alive(self.FIELD_SIZE[1] * self.block_size[1]):
-                self.running = False
+                self.lose()
 
     def get_from_file(self, file_name):
         # S - незаполненное место, K - кнопка, B - коробка, HB - тяжелая коробка,
@@ -479,6 +492,26 @@ class Level:
                             self.block_size)
                     elif sign.upper() == "S":
                         pass
+
+    def show_message(self):
+        message = self.message_font.render(self.message,
+                                           True, pygame.Color(TITLE_COLOR))
+        sub_message = self.sub_message_font.render(self.sub_message,
+                                                   True, pygame.Color(SECOND_TITLE_COLOR))
+        message_dest = message.get_rect(center=(self.res[0] // 2,
+                                                self.res[1] // 3))
+        sub_message_dest = sub_message.get_rect(center=(self.res[0] // 2,
+                                                        self.res[1] // 2))
+        self.surface.blit(message, message_dest)
+        self.surface.blit(sub_message, sub_message_dest)
+
+    def win(self):
+        self.freeze = True
+        self.message = "Победа"
+
+    def lose(self):
+        self.freeze = True
+        self.message = "Проигрыш"
 
 
 if __name__ == '__main__':

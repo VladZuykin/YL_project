@@ -292,7 +292,7 @@ class KeyAndDoor(pygame.sprite.Sprite):
             d_coords[1]
 
     def scale_door(self, img, size_need):
-        img.fill(pygame.Color(self.color), (17, 17, 43, 112))
+        img.fill(pygame.Color(self.color), (15, 15, 45, 115))
         src_size = img.get_rect()[2:]
         new_width = src_size[0] * size_need[1] // src_size[1]
         new_size = new_width, size_need[1]
