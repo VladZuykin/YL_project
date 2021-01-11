@@ -119,6 +119,7 @@ class MainMenu:
 
     def run_level(self, num):
         self.message_drop()
+        print(num)
         Level(self.LVL_FILE_FORMAT.format(num), self.res, self.screen, self.control_scheme)
 
     def first_menu_processing(self, btn_num):

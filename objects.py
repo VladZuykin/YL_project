@@ -286,13 +286,16 @@ class KeyAndDoor(pygame.sprite.Sprite):
         self.image.fill(self.color)
 
         self.door = pygame.sprite.Sprite(objects_groups["walls"])
-        self.door.image = self.scale_door(load_image("Door.png", "pictures"), d_size)
+        self.door.image = self.scale_door(load_image("Door.png", "pictures", (255, 255, 255)), d_size)
         self.door.rect = self.door.image.get_rect()
         self.door.rect.x, self.door.rect.y = d_coords[0] + (d_size[0] - self.door.rect[2]) // 2, \
             d_coords[1]
 
     def scale_door(self, img, size_need):
-        img.fill(pygame.Color(self.color), (18, 12, 42, 120))
+        # Окрашивает часть двери в цвет кнопки.
+        img.fill(pygame.Color(self.color), (40, 4, 8, 141))
+        img.fill(pygame.Color(self.color), (35, 47, 18, 20))
+        # Масштабирование изображения.
         src_size = img.get_rect()[2:]
         new_width = src_size[0] * size_need[1] // src_size[1]
         new_size = new_width, size_need[1]
