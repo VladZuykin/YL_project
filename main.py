@@ -37,6 +37,7 @@ class MainMenu:
         )
         self.res = self.DEFAULT_WIN_SIZE
         self.control_scheme = "DEFAULT"
+        self.levels = self.find_lvls_avaible()
         pygame.init()
         pygame.display.set_caption(self.GAME_NAME)
         self.window_definition()
@@ -119,7 +120,6 @@ class MainMenu:
 
     def run_level(self, num):
         self.message_drop()
-        print(num)
         Level(self.LVL_FILE_FORMAT.format(num), self.res, self.screen, self.control_scheme)
 
     def first_menu_processing(self, btn_num):
@@ -136,7 +136,7 @@ class MainMenu:
     def second_menu_processing(self, btn_num, pos):
         if btn_num != -1:
             if self.menu_num[1] == 0:
-                self.run_level(self.check_for_button_clicked(pos) + 1)  # Запуск уровня
+                self.run_level(self.levels[(self.check_for_button_clicked(pos))])  # Запуск уровня
             elif self.menu_num[1] == 1:
                 self.menu_scroll[2] = 0
                 if self.menu_num[2] != btn_num:
