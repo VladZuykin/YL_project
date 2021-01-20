@@ -339,7 +339,8 @@ class Level:
                                "l_exit": pygame.sprite.Group(),
                                "h_exit": pygame.sprite.Group(),
                                "light": pygame.sprite.Group(),
-                               "heavy": pygame.sprite.Group()}
+                               "heavy": pygame.sprite.Group(),
+                               "portals": pygame.sprite.Group()}
 
         self.get_from_file(lvl_file_name)
 
@@ -407,6 +408,7 @@ class Level:
         self.objects_groups["l_exit"].draw(self.surface)
         self.objects_groups["spikes"].draw(self.surface)
         self.objects_groups["vanished"].draw(self.surface)
+        self.objects_groups["portals"].draw(self.surface)
 
     def update(self, action_list):  # Принимает коллекцию с кортежами действий персонажей.
         for person_num, person in enumerate(self.persons):
@@ -464,7 +466,6 @@ class Level:
                         Box(self.objects_groups, absolute_coords, self.block_size, False)
                     elif sign.upper() == "HB":
                         Box(self.objects_groups, absolute_coords, self.block_size, True)
-
                     elif sign.upper() == "H":
                         self.persons.append(HighWeighter(self.objects_groups["heavy"],
                                                          absolute_coords, self.block_size))
@@ -473,12 +474,24 @@ class Level:
                                                           absolute_coords, self.block_size))
 
                     elif sign.upper() in ("HE", "LE", "W", "V"):
-                        if sign.upper() == "HE":
-                            group = "h_exit"
-                            picture = "HighWeighterPortal.png"
-                        elif sign.upper() == "LE":
-                            group = "l_exit"
-                            picture = "LightWeighterPortal.png"
+                        if sign.upper() in ("HE", "LE"):
+                            if sign.upper() == "HE":
+                                exit_name = "h_exit"
+                                picture = "HighWeighterPortal.png"
+                            else:
+                                exit_name = "l_exit"
+                                picture = "LightWeighterPortal.png"
+
+                            sprite = pygame.sprite.Sprite(self.objects_groups[exit_name])
+                            sprite.image = pygame.Surface((int(self.block_size[0] * 0.1),
+                                                          int(self.block_size[1] * 0.5)))
+                            sprite.image.fill(pygame.Color("#fcf8cb"))
+                            sprite.rect = sprite.image.get_rect()
+                            sprite.rect.x = absolute_coords[0] + (self.block_size[0] -
+                                                                  sprite.image.get_size()[0]) // 2
+                            sprite.rect.y = absolute_coords[1] + (self.block_size[1] -
+                                                                  sprite.image.get_size()[1])
+                            group = "portals"
                         elif sign.upper() == "W":
                             group = "walls"
                             picture = "Wall.png"
@@ -491,8 +504,6 @@ class Level:
                             picture,
                             "pictures"),
                             self.block_size)
-                    elif sign.upper() == "S":
-                        pass
 
     def show_message(self):
         message = self.message_font.render(self.message,
