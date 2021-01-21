@@ -172,8 +172,14 @@ class HighWeighter(Character):
     def sprite_changing(self):
         if self.hor_vel > 0 and self.rev:
             self.rev = False
+            self.frame_num = 1
+            self.sprite_timer = 0
+            return
         if self.hor_vel < 0 and not self.rev:
             self.rev = True
+            self.frame_num = 6
+            self.sprite_timer = 0
+            return
         if self.hor_vel == 0:
             self.frame_num = self.rev * 5
             return
@@ -196,8 +202,12 @@ class LightWeighter(Character):
     ANIM_VEL = 5
 
     def __init__(self, group, coords, size):
-        super().__init__(group, coords, size, load_image(self.IMG_NAME, self.DIR), 4, 4, False)
-        self.frames = [self.frames[0], *self.frames[4:12]]
+        super().__init__(group, coords, size, load_image(self.IMG_NAME, self.DIR), 1, 1, False)
+        self.frames.append(pygame.transform.scale(load_image('LightWeighter1.png', self.DIR), size))
+        self.frames.append(pygame.transform.scale(load_image('LightWeighter2.png', self.DIR), size))
+        self.rev = False
+        for i in range(3):
+            self.frames.append(pygame.transform.flip(self.frames[i], True, False))
 
         self.V = size[0] * 2
         self.G = size[1] * 6
@@ -207,25 +217,27 @@ class LightWeighter(Character):
         return pygame.sprite.spritecollideany(self, objects_groups["l_exit"])
 
     def sprite_changing(self):
-        if self.hor_vel == 0:
-            self.frame_num = 0
+        if self.hor_vel > 0 and self.rev:
+            self.rev = False
+            self.frame_num = 1
+            self.sprite_timer = 0
             return
-        elif self.hor_vel > 0:
-            if self.frame_num < 5:
-                self.frame_num = 5
-                self.sprite_timer = 0
-            elif self.sprite_timer == self.ANIM_VEL:
-                self.frame_num = (self.frame_num - 4) % 4 + 5
-                self.sprite_timer = 0
-            self.sprite_timer += 1
-        elif self.hor_vel < 0:
-            if self.frame_num == 0 or self.frame_num > 4:
-                self.frame_num = 1
-                self.sprite_timer = 0
-            elif self.sprite_timer == self.ANIM_VEL:
-                self.frame_num = self.frame_num % 4 + 1
-                self.sprite_timer = 0
-            self.sprite_timer += 1
+        if self.hor_vel < 0 and not self.rev:
+            self.rev = True
+            self.frame_num = 4
+            self.sprite_timer = 0
+            return
+        if self.hor_vel == 0:
+            self.frame_num = self.rev * 3
+            return
+        if self.frame_num % 3 == 0:
+            self.sprite_timer = 0
+            self.frame_num = self.rev * 3 + 1
+            return
+        if self.sprite_timer == self.ANIM_VEL:
+            self.sprite_timer = 0
+            self.frame_num = self.frame_num % 3 % 2 + 1 + self.rev * 3
+        self.sprite_timer += 1
 
 
 # Класс, реализующий коробку, а именно её отображение, перемещение спрайта,
