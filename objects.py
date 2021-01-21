@@ -199,7 +199,7 @@ class LightWeighter(Character):
     DIR = 'animation'
     IMG_NAME = 'LightWeighter.png'
 
-    ANIM_VEL = 5
+    ANIM_VEL = 20
 
     def __init__(self, group, coords, size):
         super().__init__(group, coords, size, load_image(self.IMG_NAME, self.DIR), 1, 1, False)
