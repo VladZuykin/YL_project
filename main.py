@@ -12,9 +12,10 @@ class MainMenu:
 
     DEFAULT_WIN_SIZE = 800, 600
     MAX_LEVELS_AMOUNT = 10
-    GAME_NAME = "Названия нет"
+    GAME_NAME = "Подъем"
     MENU_BORDER_RADIUS = 10
     LVL_FILE_FORMAT = "lvl_{}.dat"
+    LVL_DIR = "levels"
     SETTINGS_FILE = "settings.dat"
 
     def __init__(self):
@@ -74,7 +75,7 @@ class MainMenu:
         levels_avaible = []
         for level_num in range(1, self.MAX_LEVELS_AMOUNT + 1):
             try:
-                f = open(self.LVL_FILE_FORMAT.format(level_num))
+                f = open(self.LVL_DIR + "\\" + self.LVL_FILE_FORMAT.format(level_num))
                 f.close()
                 levels_avaible.append(level_num)
             except FileNotFoundError:
@@ -120,7 +121,8 @@ class MainMenu:
 
     def run_level(self, num):
         self.message_drop()
-        Level(self.LVL_FILE_FORMAT.format(num), self.res, self.screen, self.control_scheme)
+        Level(self.LVL_DIR + "\\" + self.LVL_FILE_FORMAT.format(num),
+              self.res, self.screen, self.control_scheme)
 
     def first_menu_processing(self, btn_num):
         if btn_num in (0, 1):
@@ -179,7 +181,7 @@ class MainMenu:
                     self.menu_border_coords[menu_num][1] + self.menu_border_size[1]:
                 return  # Если все кнопки влезают в рамки меню, скролл не работает.
             if btn_num == 4:
-                scroll = min(0, self.menu_scroll[menu_num] + self.res[1] * 0.05)
+                scroll = min(0, int(self.menu_scroll[menu_num] + self.res[1] * 0.05))
             else:
                 scroll = max(-self.menu_max_scroll[menu_num][self.menu_num[menu_num]],
                              self.menu_scroll[menu_num] - self.res[1] * 0.05)
@@ -221,8 +223,10 @@ class MainMenu:
             for btn_num in range(len(self.btns_coords[menu_num][self.menu_num[menu_num]])):
                 btn_src_coords = self.btns_coords[menu_num][self.menu_num[menu_num]][btn_num]
                 btn_coords = btn_src_coords[0], btn_src_coords[1] + self.menu_scroll[menu_num]
-                if btn_coords[1] + self.btn_size[menu_num][1] < self.menu_border_coords[menu_num][1] or \
-                        btn_coords[1] > self.menu_border_coords[menu_num][1] + self.menu_border_size[1]:
+                if btn_coords[1] + self.btn_size[menu_num][1] <\
+                        self.menu_border_coords[menu_num][1] or \
+                        btn_coords[1] >\
+                        self.menu_border_coords[menu_num][1] + self.menu_border_size[1]:
                     continue
                 # Прямоугольники кнопки
                 pygame.draw.rect(self.screen, pygame.Color(SECOND_COLOR),
@@ -276,10 +280,13 @@ class MainMenu:
 
         self.between_buttons_margin = self.res[1] * 0.02
         self.btn_size = []
-        self.btn_size.append((self.menu_border_size[0] - self.outer_margins[0] * 2,
+        self.btn_size.append((self.menu_border_size[0] -
+                              self.outer_margins[0] * 2,
                               (self.menu_border_size[1] -
-                               (self.outer_margins[1] * 2 + self.between_buttons_margin *
-                                (len(self.BUTTON_TITLES[0][0]) - 1))) // len(self.BUTTON_TITLES[0][0])))
+                               (self.outer_margins[1] * 2 +
+                                self.between_buttons_margin *
+                                (len(self.BUTTON_TITLES[0][0]) - 1))) //
+                              len(self.BUTTON_TITLES[0][0])))
         for _ in range(2):
             self.btn_size.append((self.btn_size[0][0], int(self.res[1] * 0.1)))
 
@@ -291,19 +298,26 @@ class MainMenu:
             for sub_menu_num in range(len(self.BUTTON_TITLES[menu_num])):
                 point_btn_coords = []
                 for btn_num in range(len(self.BUTTON_TITLES[menu_num][sub_menu_num])):
-                    btn_y = int(self.menu_border_coords[menu_num][1] + self.outer_margins[1] +
-                                (self.between_buttons_margin + self.btn_size[menu_num][1]) * btn_num)
+                    btn_y = int(self.menu_border_coords[menu_num][1] +
+                                self.outer_margins[1] +
+                                (self.between_buttons_margin +
+                                 self.btn_size[menu_num][1]) * btn_num)
                     point_btn_coords.append((btn_x, btn_y))
                 menu_btns_coords.append(point_btn_coords.copy())
             self.btns_coords.append(menu_btns_coords.copy())
 
-        # Определение скроллов и максимальных скроллов меню.
+        # Определение максимальных скроллов меню.
         self.menu_max_scroll = []
         for menu_num in range(3):
-            self.menu_max_scroll.append([(self.between_buttons_margin + 1 + self.btn_size[menu_num][1]) *
+            self.menu_max_scroll.append([(self.between_buttons_margin + 1 +
+                                          self.btn_size[menu_num][1]) *
                                          len(self.BUTTON_TITLES[menu_num][sub_menu_num]) -
                                          self.menu_border_size[1]
-                                         for sub_menu_num in range(len(self.BUTTON_TITLES[menu_num]))])
+                                         for sub_menu_num in range(
+                    len(self.BUTTON_TITLES[menu_num])
+                                                                    )
+                                         ]
+                                        )
 
         # Определение размера шрифтов.
         self.button_title_font = pygame.font.SysFont('Calibri', int(self.res[0] * 0.05))
@@ -323,7 +337,9 @@ class Level:
         self.message = ""
         self.sub_message = "Нажмите Q, чтобы вернуться в меню."
         self.message_font = pygame.font.SysFont("Calibri", self.res[0] // 8, True)
-        self.sub_message_font = pygame.font.SysFont("Calibri", self.res[0] // 20, True)
+        self.sub_message_font = pygame.font.SysFont("Calibri", self.res[0] // 40, True)
+        self.message_center = (0, 0)
+        self.sub_message_center = (res[0] * 0.23, res[1] * 0.95)
 
         self.block_size = self.res[0] // self.FIELD_SIZE[0], \
             self.res[1] // self.FIELD_SIZE[1]
@@ -381,7 +397,7 @@ class Level:
 
                     elif event.type == pygame.KEYUP:
                         if event.key == pygame.K_LEFT:
-                           self.persons_actions[0]["move_left"] = False
+                            self.persons_actions[0]["move_left"] = False
                         elif event.key == pygame.K_a:
                             self.persons_actions[1]["move_left"] = False
 
@@ -394,8 +410,7 @@ class Level:
             if not self.freeze:
                 self.update(self.persons_actions)
                 self.persons_actions[0]["jump"] = self.persons_actions[1]["jump"] = False
-            else:
-                self.show_message()
+            self.show_message()
             pygame.display.flip()
 
     def draw(self):
@@ -410,6 +425,10 @@ class Level:
         self.objects_groups["vanished"].draw(self.surface)
         self.objects_groups["portals"].draw(self.surface)
 
+    def show_end_title(self):
+        self.message_center = (self.res[0] // 2, self.res[1] // 3)
+        self.sub_message_center = (self.res[0] // 2, self.res[1] // 2)
+
     def update(self, action_list):  # Принимает коллекцию с кортежами действий персонажей.
         for person_num, person in enumerate(self.persons):
             person.update(action_list[person_num], self.objects_groups)
@@ -422,11 +441,11 @@ class Level:
                 win = False
                 break
         if win:
-            self.win()
+            self.level_end(True)
 
         for person in self.persons:
             if not person.is_alive(self.FIELD_SIZE[1] * self.block_size[1]):
-                self.lose()
+                self.level_end(False)
 
     def get_from_file(self, file_name):
         # S - незаполненное место, K - кнопка, B - коробка, HB - тяжелая коробка,
@@ -440,6 +459,7 @@ class Level:
                                       row_num * self.block_size[1]
                     if sign.upper()[0] == "K":
                         door_coords = [int(num) for num in sign[2:len(sign) - 1].split(";")]
+                        print(door_coords)
                         door_absolute_coords = door_coords[0] * self.block_size[0], \
                             door_coords[1] * self.block_size[1]
 
@@ -482,15 +502,17 @@ class Level:
                                 exit_name = "l_exit"
                                 picture = "LightWeighterPortal.png"
 
-                            sprite = pygame.sprite.Sprite(self.objects_groups[exit_name])
-                            sprite.image = pygame.Surface((int(self.block_size[0] * 0.1),
-                                                          int(self.block_size[1] * 0.5)))
-                            sprite.image.fill(pygame.Color("#fcf8cb"))
-                            sprite.rect = sprite.image.get_rect()
-                            sprite.rect.x = absolute_coords[0] + (self.block_size[0] -
-                                                                  sprite.image.get_size()[0]) // 2
-                            sprite.rect.y = absolute_coords[1] + (self.block_size[1] -
-                                                                  sprite.image.get_size()[1])
+                            exit_sprite = pygame.sprite.Sprite(self.objects_groups[exit_name])
+                            exit_sprite.image = pygame.Surface((int(self.block_size[0] * 0.1),
+                                                               int(self.block_size[1] * 0.5)))
+                            exit_sprite.image.fill(pygame.Color("#FBF293"))
+                            exit_sprite.rect = exit_sprite.image.get_rect()
+                            exit_sprite.rect.x = absolute_coords[0] + \
+                                (self.block_size[0] -
+                                 exit_sprite.image.get_size()[0]) // 2
+                            exit_sprite.rect.y = absolute_coords[1] +\
+                                (self.block_size[1] -
+                                 exit_sprite.image.get_size()[1])
                             group = "portals"
                         elif sign.upper() == "W":
                             group = "walls"
@@ -510,20 +532,18 @@ class Level:
                                            True, pygame.Color(TITLE_COLOR))
         sub_message = self.sub_message_font.render(self.sub_message,
                                                    True, pygame.Color(SECOND_TITLE_COLOR))
-        message_dest = message.get_rect(center=(self.res[0] // 2,
-                                                self.res[1] // 3))
-        sub_message_dest = sub_message.get_rect(center=(self.res[0] // 2,
-                                                        self.res[1] // 2))
+        message_dest = message.get_rect(center=self.message_center)
+        sub_message_dest = sub_message.get_rect(center=self.sub_message_center)
         self.surface.blit(message, message_dest)
         self.surface.blit(sub_message, sub_message_dest)
 
-    def win(self):
+    def level_end(self, won):
+        if won:
+            self.message = "Победа"
+        else:
+            self.message = "Проигрыш"
         self.freeze = True
-        self.message = "Победа"
-
-    def lose(self):
-        self.freeze = True
-        self.message = "Проигрыш"
+        self.show_end_title()
 
 
 if __name__ == '__main__':
