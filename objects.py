@@ -6,10 +6,12 @@ from random import randrange
 FPS = 60
 
 
+# Функция, возвращающая рандомный цвет
 def generate_color():
     return randrange(0, 255), randrange(0, 255), randrange(0, 255)
 
 
+# Функция,загружающая картинку, фон которой должен быть прозрачным
 def load_image(name, dir, colorkey=None):
     fullname = os.path.join(dir, name)
     if not os.path.isfile(fullname):
@@ -27,6 +29,9 @@ def load_image(name, dir, colorkey=None):
     return image
 
 
+# Класс - наследник от Sprite, хранящий в себе массив спрайтов, для анимации,
+# релизующий получение этого массива через картинку, перемещение спрайта на
+# какие-то координаты и смену активного изображения спрайта.
 class AnimatedSprite(pygame.sprite.Sprite):
     def __init__(self, group, sheet, columns, rows, x, y, size, begin_frame_num=0):
         super().__init__(group)
@@ -55,6 +60,9 @@ class AnimatedSprite(pygame.sprite.Sprite):
         self.image = self.frames[frame_num]
 
 
+# Класс - наследник от AnimatedSprite, который реализует общие функции обоих
+# персонажей, а именно: перемещение с учётом физики и взаимодействия с другими
+# объектами, смерть, заглушка для анимации и проверка на жизнеспособность
 class Character(AnimatedSprite):
     def __init__(self, group, coords, size, sheet, columns, rows, is_heavy):
         super().__init__(group, sheet, columns, rows, *coords, size, 0)
@@ -135,12 +143,24 @@ class Character(AnimatedSprite):
         pass
 
 
+# Класс, ревлизующий особенности сильного персонажа, а именно анимацию,
+# проверку на нахождение в выходе, физ. величины и изображения
 class HighWeighter(Character):
     DIR = 'animation'
     IMG_NAME = 'HighWeighter.png'
 
+    ANIM_VEL = 20
+
     def __init__(self, group, coords, size):
-        super().__init__(group, coords, size, load_image(self.IMG_NAME, self.DIR), 5, 1, True)
+        super().__init__(group, coords, size, load_image(self.IMG_NAME, self.DIR), 1, 1, True)
+        self.frames.append(pygame.transform.scale(load_image('HighWeighter1.png', self.DIR), size))
+        self.frames.append(pygame.transform.scale(load_image('HighWeighter3.png', self.DIR), size))
+        self.frames.append(pygame.transform.scale(load_image('HighWeighter2.png', self.DIR), size))
+        self.frames.append(pygame.transform.scale(load_image('HighWeighter3.png', self.DIR), size))
+        self.rev = False
+        for i in range(5):
+            self.frames.append(pygame.transform.flip(self.frames[i].copy(), True, False))
+
 
         self.V = size[0] // 1.2
         self.G = size[1] * 7
@@ -150,15 +170,25 @@ class HighWeighter(Character):
         return pygame.sprite.spritecollideany(self, objects_groups["h_exit"])
 
     def sprite_changing(self):
+        if self.hor_vel > 0 and self.rev:
+            self.rev = False
+        if self.hor_vel < 0 and not self.rev:
+            self.rev = True
         if self.hor_vel == 0:
-            self.frame_num = 0
+            self.frame_num = self.rev * 5
             return
-        if self.hor_vel > 0:
-            self.frame_num = 4
-        if self.hor_vel < 0:
-            self.frame_num = 1
+        if self.frame_num % 5 == 0:
+            self.sprite_timer = 0
+            self.frame_num = self.rev * 5 + 1
+            return
+        if self.sprite_timer == self.ANIM_VEL:
+            self.sprite_timer = 0
+            self.frame_num = self.frame_num % 5 % 4 + 1 + self.rev * 5
+        self.sprite_timer += 1
 
 
+# Класс, реализующий особенности ловкого персонажа, а именно анимацию,
+# проверку на нахождение в выходе, физ. величины и изображения
 class LightWeighter(Character):
     DIR = 'animation'
     IMG_NAME = 'LightWeighter.png'
@@ -198,6 +228,8 @@ class LightWeighter(Character):
             self.sprite_timer += 1
 
 
+# Класс, реализующий коробку, а именно её отображение, перемещение спрайта,
+# перемещение с учётом физику, попытку пермещения персножей этой коробки.
 class Box(pygame.sprite.Sprite):
     def __init__(self, objects_groups, coords, size, is_heavy):
         super().__init__()
@@ -270,6 +302,8 @@ class Box(pygame.sprite.Sprite):
             self.vert_vel += self.G / FPS
 
 
+# Класс, реализующий кнопку и дверь, а именно их отображение, взаимодействие
+# между собой, нажатие кнопки каким-то объектом, физику двери и её открытие
 class KeyAndDoor(pygame.sprite.Sprite):
     def __init__(self, objects_groups, k_coords, k_size, d_coords, d_size):
         super().__init__(objects_groups["keys"])
