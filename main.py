@@ -43,7 +43,9 @@ class MainMenu:
         pygame.display.set_caption(self.GAME_NAME)
         self.window_definition()
 
+        # Обозначение открытых пунктов меню.
         self.menu_num = [0, -1, -1]
+        # Обозначение значения скроллов меню.
         self.menu_scroll = [0] * 3
         self.clock = pygame.time.Clock()
 
@@ -448,16 +450,12 @@ class Level:
                 self.level_end(False)
 
     def get_from_file(self, file_name):
-        # S - незаполненное место, K - кнопка, B - коробка, HB - тяжелая коробка,
-        # H - тяжелый персонаж, L - легкий персонаж, D - дверь, W - опорные блоки(стены),
-        # HE - выход тяжелого персонажа, LE - выход легкого персонажа,
-        # V - прозрачные облака, SP - шипы.
         with open(file_name, "r", encoding="UTF-8") as f:
             for row_num, row in enumerate(f.readlines()):
                 for col_num, sign in enumerate(row.split()):
                     absolute_coords = col_num * self.block_size[0], \
                                       row_num * self.block_size[1]
-                    if sign.upper()[0] == "K":
+                    if sign.upper()[0] == "K":  # Кнопка
                         door_coords = [int(num) for num in sign[2:len(sign) - 1].split(";")]
                         print(door_coords)
                         door_absolute_coords = door_coords[0] * self.block_size[0], \
@@ -471,7 +469,7 @@ class Level:
                                    key_absolute_coords, key_size,
                                    door_absolute_coords, self.block_size)
 
-                    elif sign.upper() == "SP":
+                    elif sign.upper() == "SP":  # Шипы
                         spikes = pygame.sprite.Sprite(self.objects_groups["spikes"])
                         spikes_size = self.block_size[0], self.block_size[1] // 2
                         spikes_coords = absolute_coords[0],\
@@ -482,19 +480,19 @@ class Level:
                             "pictures"),
                             spikes_size)
 
-                    elif sign.upper() == "B":
+                    elif sign.upper() == "B":  # Коробка
                         Box(self.objects_groups, absolute_coords, self.block_size, False)
-                    elif sign.upper() == "HB":
+                    elif sign.upper() == "HB":  # Тяжелая коробка
                         Box(self.objects_groups, absolute_coords, self.block_size, True)
-                    elif sign.upper() == "H":
+                    elif sign.upper() == "H":  # Тяжелый персонаж
                         self.persons.append(HighWeighter(self.objects_groups["heavy"],
                                                          absolute_coords, self.block_size))
-                    elif sign.upper() == "L":
+                    elif sign.upper() == "L":  # Легкий персонаж
                         self.persons.append(LightWeighter(self.objects_groups["light"],
                                                           absolute_coords, self.block_size))
 
                     elif sign.upper() in ("HE", "LE", "W", "V"):
-                        if sign.upper() in ("HE", "LE"):
+                        if sign.upper() in ("HE", "LE"):  # Выходы
                             if sign.upper() == "HE":
                                 exit_name = "h_exit"
                                 picture = "HighWeighterPortal.png"
@@ -514,10 +512,10 @@ class Level:
                                 (self.block_size[1] -
                                  exit_sprite.image.get_size()[1])
                             group = "portals"
-                        elif sign.upper() == "W":
+                        elif sign.upper() == "W":  # Стены
                             group = "walls"
                             picture = "Wall.png"
-                        elif sign.upper() == "V":
+                        elif sign.upper() == "V":  # Полупрозрачные облака
                             group = "vanished"
                             picture = "Vanished.png"
                         obj = pygame.sprite.Sprite(self.objects_groups[group])
