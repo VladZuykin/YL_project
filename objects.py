@@ -283,6 +283,9 @@ class Box(pygame.sprite.Sprite):
         return
 
     def update(self, objects_groups):
+        if pygame.sprite.spritecollideany(self, objects_groups["walls"]):
+            self.kill()
+            return
         self.move(self.x, self.y + 1)
         if not pygame.sprite.spritecollideany(self, objects_groups["walls"]) and \
                 not len(pygame.sprite.spritecollide(self, objects_groups["boxes"], False)) > 1 and \
